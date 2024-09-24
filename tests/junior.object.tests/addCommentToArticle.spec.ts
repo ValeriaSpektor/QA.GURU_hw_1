@@ -5,32 +5,27 @@ test('Add comment to article', async ({ page }) => {
   await page.goto('https://realworld.qa.guru/#/');
 
   // Переход к статье
-  await page.getByRole('link', { name: 'Новая статья о ИИ Read more' }).click();
+  await page.getByRole('link', { name: /Новая статья о ИИ/ }).click();
 
   // Переход к странице авторизации
   await page.getByRole('link', { name: 'Sign in' }).click();
 
-  // Ввод логина
-  await page.getByPlaceholder('Email').click();
+  // Ввод логина и пароля
   await page.getByPlaceholder('Email').fill('lapusik84@gmail.com');
-
-  // Ввод пароля
-  await page.getByPlaceholder('Password').click();
   await page.getByPlaceholder('Password').fill('542073vl');
-
-  // Логин
   await page.getByRole('button', { name: 'Login' }).click();
+
+  // Проверка успешного логина
+  await expect(page).toHaveURL(/realworld.qa.guru/);
 
   // Переход в глобальную ленту
   await page.getByRole('button', { name: 'Global Feed' }).click();
 
-  // Открытие статьи
-  await page.getByRole('link', { name: 'Новая статья о ИИ Read more' }).click();
-
-  // Добавление комментария
-  await page.getByPlaceholder('Write a comment...').click();
+  // Открытие статьи и добавление комментария
+  await page.getByRole('link', { name: /Новая статья о ИИ/ }).click();
   await page.getByPlaceholder('Write a comment...').fill('Очень полезная публикация');
-
-  // Отправка комментария
   await page.getByRole('button', { name: 'Post Comment' }).click();
+
+  // Проверка успешной отправки комментария
+  await expect(page.getByText('Очень полезная публикация')).toBeVisible();
 });
