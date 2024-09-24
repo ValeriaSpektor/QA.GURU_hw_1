@@ -1,8 +1,8 @@
-const { test } = require('@playwright/test');
+const { test, expect } = require('@playwright/test'); 
 const { LoginPage } = require('../../src/page.object.class/LoginPage');
 const { NewArticlePage } = require('../../src/page.object.class/NewArticlePage');
 
-test.only('Create and publish a new article', async ({ page }) => {
+test('Create and publish a new article', async ({ page }) => {
   // Инициализация Page Object классов
   const loginPage = new LoginPage(page);
   const newArticlePage = new NewArticlePage(page);
@@ -25,4 +25,16 @@ test.only('Create and publish a new article', async ({ page }) => {
     '##AI'
   );
 
+  // Ожидание завершения публикации (ждем URL страницы статьи)
+  await page.waitForURL(/.*\/article\/.*/, { timeout: 10000 });
+
+  // Дополнительная проверка на присутствие заголовка статьи перед проверкой текста
+  const articleTitle = page.locator('h1');
+  await expect(articleTitle).toBeVisible({ timeout: 30000 });
+
+  // Проверка успешной публикации статьи
+  await expect(articleTitle).toHaveText('Новая статья', { timeout: 30000 });
+
+  // Проверка наличия описания статьи
+  await expect(page.locator('p')).toHaveText('о ИИ');
 });

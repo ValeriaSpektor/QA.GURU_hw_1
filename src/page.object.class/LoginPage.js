@@ -1,4 +1,4 @@
-class LoginPage {
+export class LoginPage {
   constructor(page) {
     this.page = page;
   }
@@ -8,7 +8,8 @@ class LoginPage {
   }
 
   async clickLoginLink() {
-    await this.page.getByRole('link', { name: ' Login' }).click();
+    // Заменяем непечатный символ на текстовый селектор
+    await this.page.getByRole('link', { name: 'Login' }).click();
   }
 
   async login(email, password) {
@@ -17,5 +18,3 @@ class LoginPage {
     await this.page.getByRole('button', { name: 'Login' }).click();
   }
 }
-
-module.exports = { LoginPage };

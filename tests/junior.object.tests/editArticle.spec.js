@@ -1,26 +1,29 @@
-import { test, expect } from '@playwright/test';
+const { test, expect } = require('@playwright/test');
+const { LoginPage } = require('../../src/page.object.class/LoginPage');
+const { ArticlePage } = require('../../src/page.object.class/ArticlePage');
 
 test('Edit an article', async ({ page }) => {
-  // Переход на сайт и авторизация
-  await page.goto('https://realworld.qa.guru/#/');
-  await page.getByRole('link', { name: /Login/ }).click();
-  await page.getByPlaceholder('Email').fill('lapusik84@gmail.com');
-  await page.getByPlaceholder('Password').fill('542073vl');
-  await page.getByPlaceholder('Password').press('Enter');
-  await expect(page).toHaveURL(/realworld.qa.guru/);
+  const loginPage = new LoginPage(page);
+  const articlePage = new ArticlePage(page);
 
-  // Переход в глобальную ленту и открытие статьи
-  await page.getByRole('button', { name: 'Global Feed' }).click();
-  await page.getByRole('link', { name: /New Article about crossfit/ }).click();
+  // Переход на страницу логина и авторизация
+  await loginPage.goto();
+  await loginPage.clickLoginLink();
+  await loginPage.login('lapusik84@gmail.com', '542073vl');
+
+  // Ждем, пока страница загрузится
+  await page.waitForLoadState('networkidle');
+
+  // Переход к статье
+  await page.waitForSelector('text=New Article about crossfit');
+  await page.getByRole('link', { name: 'New Article about crossfit' }).click();
 
   // Переход на страницу редактирования статьи
-  await page.getByRole('link', { name: /Edit Article/ }).click();
+  await page.getByRole('link', { name: 'Edit Article' }).click();
 
-  // Редактирование статьи
-  await page.getByPlaceholder('What\'s this article about?').fill('Crossfit is my life');
-  await page.getByPlaceholder('Write your article (in').fill('workout');
-  await page.getByRole('button', { name: 'Update Article' }).click();
+  // Редактируем статью
+  await articlePage.editArticle('Updated title', 'Updated description', 'Updated content', '##UpdatedTag');
 
-  // Проверка успешного обновления статьи
-  await expect(page.getByText('Crossfit is my life')).toBeVisible();
+  // Проверяем успешность редактирования
+  await expect(page.locator('h1')).toHaveText('Updated title');
 });

@@ -1,10 +1,11 @@
-class NewArticlePage {
+export class NewArticlePage {
   constructor(page) {
     this.page = page;
   }
 
   async gotoNewArticlePage() {
-    await this.page.getByRole('link', { name: ' New Article' }).click();
+    // Заменяем непечатный символ на текстовый селектор
+    await this.page.getByRole('link', { name: 'New Article' }).click();
   }
 
   async createArticle(title, description, body, tags) {
@@ -15,5 +16,3 @@ class NewArticlePage {
     await this.page.getByRole('button', { name: 'Publish Article' }).click();
   }
 }
-
-module.exports = { NewArticlePage };
