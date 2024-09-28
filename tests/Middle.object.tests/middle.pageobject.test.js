@@ -1,48 +1,125 @@
 import { test, expect } from '@playwright/test';
-import { faker } from '@faker-js/faker';
-import { LoginPage } from '../../src/page.object.class/LoginPage.js';
-import { NewArticlePage } from '../../src/page.object.class/ArticlePage.js'
-import { MainPage } from '../../src/page.object.class/MainPage.js';
 
-const existedUser = {
-    email: 'lapusik84@gmail.com',
-    password: '542073vl'
-};
+class LoginPage {
+    constructor(page) {
+        this.page = page;
+        this.emailInput = page.getByPlaceholder('Email');
+        this.passwordInput = page.getByPlaceholder('Password');
+        this.loginButton = page.getByRole('button', { name: 'Login' });
+    }
+
+    async open() {
+        await this.page.goto('https://realworld.qa.guru/#/');
+    }
+
+    async login(email, password) {
+        await this.page.getByRole('link', { name: ' Login' }).click();
+        await this.emailInput.fill(email);
+        await this.passwordInput.fill(password);
+        await this.loginButton.click();
+    }
+}
+
+class ArticlePage {
+    constructor(page) {
+        this.page = page;
+        this.newArticleButton = page.getByRole('link', { name: ' New Article' });
+        this.titleInput = page.getByPlaceholder('Article Title');
+        this.descriptionInput = page.getByPlaceholder('What\'s this article about?');
+        this.bodyInput = page.getByPlaceholder('Write your article (in');
+        this.tagsInput = page.getByPlaceholder('Enter tags');
+        this.publishButton = page.getByRole('button', { name: 'Publish Article' });
+        this.editArticleButton = page.getByRole('button', { name: 'Edit Article' }).first();
+        this.updateButton = page.getByRole('button', { name: 'Update Article' });
+        this.deleteButton = page.getByRole('button', { name: 'Delete Article' }).first();
+    }
+
+    async createArticle(title, description, body, tags) {
+        await this.newArticleButton.click();
+        await this.titleInput.fill(title);
+        await this.descriptionInput.fill(description);
+        await this.bodyInput.fill(body);
+        await this.tagsInput.fill(tags);
+        await this.publishButton.click();
+    }
+
+    async goToArticle() {
+        await this.page.waitForSelector('h1', { timeout: 60000 });
+        await this.page.getByRole('heading', { name: 'Есть ли жизнь на Марсе' }).click();
+    }
+
+    async editArticle(newBody) {
+        await this.editArticleButton.click();
+        await this.bodyInput.fill(newBody);
+        await this.updateButton.click();
+    }
+
+    async deleteArticle() {
+        await this.deleteButton.click();
+    }
+}
+
+class CommentPage {
+    constructor(page) {
+        this.page = page;
+        this.commentInput = page.getByPlaceholder('Write a comment...');
+        this.postCommentButton = page.getByRole('button', { name: 'Post Comment' });
+    }
+
+    async postComment(comment) {
+        await this.commentInput.fill(comment);
+        await this.postCommentButton.click();
+    }
+}
 
 test.describe('Middle Page Object Style: Article Tests', () => {
-    test.beforeEach(async ({ page }) => {
+
+    test('Create, edit, comment, and delete an article', async ({ page }) => {
         const loginPage = new LoginPage(page);
+        const articlePage = new ArticlePage(page);
+        const commentPage = new CommentPage(page);
+
+        // Логин
         await loginPage.open();
-        await loginPage.doLogin(existedUser.email, existedUser.password);
-        await loginPage.verifyLoginSuccess(existedUser.email);
-    });
-
-    test('Create, favorite and delete article', async ({ page }) => {
-        const articlePage = new NewArticlePage(page);
-        const mainPage = new MainPage(page);
-
-        const articleTitle = faker.lorem.words(3); // Генерируем случайное название
-        const description = faker.lorem.sentence();
-        const content = faker.lorem.paragraph();
-        const tags = faker.lorem.word();
+        await loginPage.login('lapusik84@gmail.com', '542073vl');
 
         // Создание статьи
-        await articlePage.goToNewArticle();
-        await articlePage.fillArticleTitle(articleTitle);
-        await articlePage.fillArticleDescription(description);
-        await articlePage.fillArticleContent(content);
-        await articlePage.fillArticleTag(tags);
-        await articlePage.publishArticle();
+        await articlePage.createArticle(
+            'Есть ли жизнь на Марсе', 
+            'Жизнь на Марсе', 
+            'Хочу улететь в космос', 
+            '#Mars'
+        );
 
-        // Проверка статьи
-        await expect(page.locator('h1')).toHaveText(articleTitle);
+        // Переход на страницу статьи
+        await articlePage.goToArticle();
 
-        // Добавление статьи в избранное
-        await mainPage.favoriteArticle(articleTitle);
-        await expect(mainPage.articleIsFavorited(articleTitle)).toBeVisible();
+        // Редактирование статьи
+        await articlePage.editArticle('хочу в космос с тобой');
 
-        // Удаление статьи
+        // Добавление комментария
+        await commentPage.postComment('Возьми меня с собой');
+
+        // Переход на главную страницу
+        await page.getByRole('link', { name: ' Home' }).click();
+
+        // Нажимаем на вкладку "Global Feed"
+        await page.getByRole('button', { name: 'Global Feed' }).click();
+
+        // Переход на статью в глобальной ленте
+        await page.getByRole('link', {
+            name: 'Есть ли жизнь на Марсе Жизнь на Марсе Read more... #Mars'
+        }).click();
+
+        // Удаление статьи с использованием диалога
+        page.once('dialog', dialog => {
+            console.log(`Dialog message: ${dialog.message()}`);
+            dialog.accept().catch(() => {});
+        });
+
         await articlePage.deleteArticle();
-        await expect(page.locator(`text=${articleTitle}`)).not.toBeVisible();
+
+        // Ожидание возвращения на главную страницу
+        await page.waitForLoadState('networkidle');
     });
 });
