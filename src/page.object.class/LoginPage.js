@@ -1,20 +1,20 @@
-export class LoginPage {
+class LoginPage {
     constructor(page) {
         this.page = page;
+        this.emailInput = page.getByPlaceholder('Email');
+        this.passwordInput = page.getByPlaceholder('Password');
+        this.loginButton = page.getByRole('button', { name: 'Login' });
     }
 
     async open() {
-        await this.page.goto('https://realworld.qa.guru/#/login');
+        await this.page.goto('https://realworld.qa.guru/#/');
     }
 
-    async doLogin(email, password) {
-        await this.page.getByPlaceholder('Email').fill(email);
-        await this.page.getByPlaceholder('Password').fill(password);
-        await this.page.getByRole('button', { name: 'Login' }).click();
-    }
-
-    async verifyLoginSuccess(email) {
-        // Теперь проверяем появление текста email на странице после успешного логина
-        await this.page.waitForSelector(`text=${email}`, { timeout: 15000 });
+    async login(email, password) {
+        await this.emailInput.fill(email);
+        await this.passwordInput.fill(password);
+        await this.loginButton.click();
     }
 }
+
+export { LoginPage };

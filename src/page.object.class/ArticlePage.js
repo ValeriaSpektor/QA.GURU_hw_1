@@ -1,31 +1,35 @@
-export class ArticlePage {
-  constructor(page) {
-      this.page = page;
-  }
+class ArticlePage {
+    constructor(page) {
+        this.page = page;
+        this.newArticleButton = page.getByRole('link', { name: 'New Article' });
+        this.titleInput = page.getByPlaceholder('Article Title');
+        this.descriptionInput = page.getByPlaceholder('What\'s this article about?');
+        this.bodyInput = page.getByPlaceholder('Write your article (in');
+        this.tagsInput = page.getByPlaceholder('Enter tags');
+        this.publishButton = page.getByRole('button', { name: 'Publish Article' });
+        this.updateButton = page.getByRole('button', { name: 'Update Article' });
+        this.editArticleButton = page.getByRole('link', { name: 'Edit Article' }).nth(1);
+        this.deleteButton = page.getByRole('button', { name: 'Delete Article' }).nth(1);
+    }
 
-  // Метод для перехода на страницу создания новой статьи
-  async gotoNewArticlePage() {
-      await this.page.getByRole('link', { name: 'New Article' }).click();
-  }
+    async createArticle(title, description, body, tags) {
+        await this.newArticleButton.click();
+        await this.titleInput.fill(title);
+        await this.descriptionInput.fill(description);
+        await this.bodyInput.fill(body);
+        await this.tagsInput.fill(tags);
+        await this.publishButton.click();
+    }
 
-  // Метод для создания новой статьи
-  async createArticle(title, description, body, tags) {
-      await this.page.getByPlaceholder('Article Title').fill(title);
-      await this.page.getByPlaceholder('What\'s this article about?').fill(description);
-      await this.page.getByPlaceholder('Write your article (in').fill(body);
-      await this.page.getByPlaceholder('Enter tags').fill(tags);
-      await this.page.getByRole('button', { name: 'Publish Article' }).click();
-  }
+    async editArticle(newBody) {
+        await this.editArticleButton.click();
+        await this.bodyInput.fill(newBody);
+        await this.updateButton.click();
+    }
 
-  // Метод для редактирования статьи
-  async editArticle(bodyUpdate) {
-      await this.page.getByRole('link', { name: 'Edit Article' }).click();
-      await this.page.getByPlaceholder('Write your article (in').fill(bodyUpdate);
-      await this.page.getByRole('button', { name: 'Update Article' }).click();
-  }
-
-  // Метод для удаления статьи
-  async deleteArticle() {
-      await this.page.getByRole('button', { name: 'Delete Article' }).click();
-  }
+    async deleteArticle() {
+        await this.deleteButton.click();
+    }
 }
+
+export { ArticlePage };
